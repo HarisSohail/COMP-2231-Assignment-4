@@ -1,0 +1,402 @@
+package bstset;
+/**
+ *
+ * @author Haris Sohail | 400127431 | sohaim10
+ *
+ */
+public class BSTSet {
+    private TNode root;//only private field
+    
+    //Constructor 1
+    public BSTSet(){//Worst case: T(1) | Best case: T(1)
+        root = null;
+    }//end BSTSet
+    
+    //Constructor 2
+    public BSTSet(int[] input){//Worst case: T(n) | Best case: T(nlog(n))
+    /*initializes the BSTSet object to represent the empty set(an empty tree)*/                                     
+        int last = input.length - 1; 
+        mergeSort(input, 0, last);//mergeSort used to sort through the list
+        //elements are put into tree from the middle 
+        int[] sort = reSort(input);
+        int sort0 = sort[0];
+        root = new TNode(sort[(1+sort0)/2], null, null);
+        left(root, 1, (1+sort0)/2 - 1, sort);//left side
+        right(root, (1+sort0)/2 + 1, sort0, sort);//right side
+    }//end BSTSet
+        
+    /*helpers for BSTSet constructor borrowed and modified from StackOverflow
+    source:(www.stackoverflow.com/questions/13727030/mergesort-in-java)
+    and from lecture Topic 4 (BST_2019)*/
+    void mergeSort(int[] array, int low, int high){//Worst case: T(n) | Best case: T(nlog(n))
+    //used for merging two halves of array
+        if(low < high){
+            int mid = (low + high)/2;//sets middle
+            mergeSort(array, low, mid);//left side
+            mergeSort(array, mid + 1, high);//right side
+            merge(array, low, mid, high);//combines together
+	}//end if	
+    }//end mergeSort
+    
+    void merge(int[] array, int low, int mid, int high){
+    //helper for mergeSort    
+        int[] temp = new int[array.length];
+	
+        for (int i = low; i <= high; i++){
+		temp[i] = array[i];
+	}//end for
+	
+	int left = low;
+	int right = mid + 1;
+	int index = low;
+	
+        //comparing for equality
+	while(left <= mid && right <= high){
+		if(temp[left] <= temp[right]){
+			array[index] = temp[left];
+			left++;	
+		}//end if
+                else{
+			array[index] = temp[right];
+			right++;
+		}//end else
+		index++;		
+	}//end while
+	
+        int remain = mid - left;
+        
+        //copy back to array
+	for (int i = 0; i <= remain; i++){
+		array[index + i] = temp[left + i];
+	}//end for
+    }//end merge 
+    
+    /*some guidance from study.com 
+    source:(www.study.com/academy/lesson/how-to-sort-an-array-in-java.html)*/
+    private int[] reSort(int[] array){//Worst case: T(1)) | Best case: T(n)
+    //helper for BSTSet
+        int v = array[0];
+        int[] set = new int[array.length + 1];
+        int count = 1;
+        set[1] = array[0];
+        
+        for(int i = 1; i < array.length; i++){
+            if(array[i] != v){
+                set[count + 1] = array[i];
+                v = array[i];
+                count ++;
+            }//end if
+        }//end for
+        set[0] = count;
+        return set;
+    }//end reSort
+    
+     private void right(TNode t, int low, int high, int[] set){//Worst case: T(log(n)) | Best case: T(n)
+     //creates right side
+        if(low <= high){
+            t.right = new TNode(set[(high + low)/2], null, null);
+            left(t.right, low, (high + low)/2 - 1, set);
+            right(t.right, (high + low)/2 + 1, high, set); 
+        }//end if
+    }//end right
+    
+    private void left(TNode t, int low, int high, int[] set){//Worst case: T(log(n)) | Best case: T(n)
+    //creates left side     
+        if(low <= high){
+            t.left = new TNode(set[(high + low)/2], null, null);
+            left(t.left, low, (high + low)/2 - 1, set);
+            right(t.left, (high + low)/2 + 1, high, set);     
+        }//end if
+    }//end left
+    
+    public boolean isIn(int v){//Worst case: T(log(n)) | Best case: T(n)
+    /*Returns true if integer v is an element of this BSTSet. 
+    It returns false otherwise.*/    
+        TNode t = root;//t is root of tree
+        while(t != null){//for when t of root is not null
+            if(t.element > v){//checks if v is smaller than current int element
+                t = t.left;//traverse left branch
+            }//end if
+            else if(t.element < v){//checks if v is greater than current int element
+                t = t.right;//traverse right branch
+            }//end else if
+            else{
+                return true;//element found in the list
+            }//end else
+        }//end while
+        return false;//element not found in list
+    }//end isIn
+    
+    public void add(int v){//Worst case: T(log(n)) | Best case: T(n)
+    /*Adds v to this BSTSet if v was not already an element of this BSTSet.  
+    It does nothing otherwise*/
+        if(root == null){
+            root = new TNode(v,null,null);
+        }//end if    
+        else{
+            if(isIn(v) == false){
+                TNode temp = root;
+                while(temp != null){//while(true){
+                    if(temp.element > v){
+                        if(temp.left == null){
+                            temp.left = new TNode(v,null,null);//add element to left node
+                            return;
+                        }//end if
+                        else
+                            temp = temp.left;//go to left node and evaluate again
+                    }//end if
+                    else if(temp.element < v){
+                        if(temp.right == null){
+                            temp.right = new TNode(v,null,null);//add element to right node
+                            return;
+                        }//end if
+                        else
+                            temp = temp.right;//go to right node and evaluate again
+                    }//end else if
+                }//end while
+            }//end if
+        }//end else
+    }//end add
+    
+    public boolean remove(int v){//Worst case: T(log(n)) | Best case: T(log(n))
+    /*Removes v from this BSTSet if v was an element of this BSTSet and  returns true.
+    Returns false if v was not an element of this BSTSet.*/
+        if(isIn(v)){//if elemtent in set
+            removeVal(root,v);//remove said element
+            return true;
+        }//end if
+        else{//element not in set
+           return false;
+        }//end else
+    }//end remove
+//------------------------------------For Remove------------------------------------\\
+/*taken/modified from lecture Topic 4 (BST_2019)*/    
+    private TNode findMin(TNode t){//Worst case: T(1) | Best case: T(log(n))
+    //finds minimum element in BST(left-most element}
+        while(t.left != null){
+            t = t.left;//traverse left
+        }//end while
+        return t;
+    }//end findMin
+    
+    private TNode removeMin(TNode t){//Worst case: T(1) | Best case: T(log(n))
+    //used to remove minimum node     
+        if (t.left != null){
+            t.left = removeMin(t.left);//remove left element
+            return t;
+        }//end if
+        else
+            return t.right;//return t to right
+    }//end removeMin
+    
+    private TNode removeVal(TNode t, int v){//Worst case: T(log(n)) | Best case: T(log(n))
+    //allows for removal of element     
+        if (v < t.element){//if v is less than the current element it is on the left 
+            t.left = removeVal(t.left, v);    
+        }//end if
+        else if(v > t.element){//if v is greater than the current element it is on the right 
+            t.right = removeVal(t.right,v);
+        }//end else if
+        else if(t.left != null && t.right != null){//delete node w/ two children
+            t.element = (findMin(t.right)).element;//find min starting at right child and find smallest element and replace
+            t.right = removeMin(t.right);//now has duplicate removes min value from right child containg node v
+        }//end else if
+        else{
+            t = (t.left != null) ? t.left : t.right;//checks largest element in left child 
+            //statement determines if what t will be: != null -> t.left | == null -> t.right 
+        }//end else
+        return t;
+    }//end removeVal
+//----------------------------------------------------------------------------------\\
+
+    public BSTSet intersection(BSTSet s){//Worst case: T(log(n)) | Best case: T(n)
+    /*Returns a new BSTSet which represents the intersection of this BSTSet and s.*/    
+        BSTSet newSet = new BSTSet();
+        int[] sort = new int[size() + 1];
+        inOrder(root, sort, s);
+        
+        if(sort[0] == 0)
+            return new BSTSet();
+        
+        int sorted = sort[0];
+        newSet.root = new TNode(sort[(1+sorted)/2], null, null);
+        right(newSet.root, 1, (1+sorted)/2 - 1, sort); 
+        left(newSet.root,(1+sorted)/2 + 1,sorted, sort);
+         
+        return newSet;
+    }//end intersection    
+//------------------------------------For Intersection------------------------------------\\    
+    private void inOrder(TNode t, int[] set, BSTSet s){//Worst case: T(log(n)) | Best case: T(n)
+    //Helper for intersection
+        if(t != null){
+            inOrder(t.left, set, s);//reccur left subtree
+            if(s.isIn(t.element)){//checks if s in this
+               set[0]++;
+               set[set[0]] = t.element;
+            }//end if
+            inOrder(t.right, set, s);//reccur right subtree
+        }//end else
+     }//end inOrder
+     
+     //private void right(TNode t, int low, int high, int[] set) used for intersection
+     //private void left(TNode t, int low, int high, int[] set) used for intersection
+//----------------------------------------------------------------------------------------\\ 
+
+    private BSTSet copy(TNode t, BSTSet temp){//Worst case: T(n) | Best case: T(n)
+    //copies original tree into a new tree to alter it
+    //for union and difference    
+        if(t != null){
+            copy(t.left, temp);
+            temp.add(t.element);//copy and add each element
+            copy(t.right, temp); 
+        }//end if
+        return temp;
+    }//end copy    
+         
+    public BSTSet union(BSTSet s) {//Worst case: T(n^2) | Best case: T(n^2)
+        BSTSet temp = new BSTSet();
+        TNode node = s.root;//start at the root of s
+        temp = copy(this.root, temp);
+        
+        if(node != null){
+            union(node, temp);//initalize operation
+        }//end if
+        
+        return temp;
+    }//end union
+//----------------------------------------For Union---------------------------------------\\     
+    private void union(TNode t, BSTSet temp){//Worst case: T(n) | Best case: T(n)
+    //helper for union
+        if(t != null) {
+            union(t.left, temp);//traverse left
+            temp.add(t.element);//add elements together
+            union(t.right, temp);//traverse right
+        }//end if
+    }//end union
+//----------------------------------------------------------------------------------------\\
+    
+    public BSTSet difference(BSTSet s){//Worst case: T(n^2) | Best case: T(n^2)
+        BSTSet temp = new BSTSet();//initialize a new set
+        TNode node = s.root;//start at the root of s
+        temp = copy(this.root, temp);//copy elements into new set
+        
+        if(node != null) {//begin at root of set s
+            difference(node, temp);//initalize operation
+        }//end if
+       
+        return temp;
+    }//end difference
+//--------------------------------------For Difference------------------------------------\\              
+    private void difference(TNode t, BSTSet temp) {//Worst case: T(n) | Best case: T(n)
+        //helper for difference
+        if(t != null){
+            difference(t.left, temp);//traverse left
+            temp.remove(t.element);//remove elements that reoccur
+            difference(t.right, temp);//traverse right
+        }//end if
+    }//end difference
+//----------------------------------------------------------------------------------------\\
+    
+    /*guidance from StackOverflow.com to complete size
+    (source):www.stackoverflow.com/questions/19166510/size-method-for-binary-trees*/
+    public int size(){//Worst case: T(log(n)) | Best case: T(n)
+    /*Returns the number of elements in this set*/
+        if(root == null){//if empty set
+            return 0;
+        }//end if
+        else{//if not empty
+            return size(root);
+        }//end else
+    }//end size
+    private int size(TNode t){//Worst case: T(log(n)) | Best case: T(n)
+    //helper for size    
+        if(t == null)//if empty set
+            return 0;
+        else//complete finding size of set
+            return size(t.left) + size(t.right) + 1;       
+    }//end size 
+    
+    public int height(){//Worst case: T(log(n)) | Best case: T(n)
+    /*Returns the height of this BSTSet. Height of an empty set is -1*/
+        if(root == null){//if empty set
+            return -1;
+        }//end if
+        else{//if not empty
+            return height(root);
+        }//end else
+    }//end height
+    private int height(TNode t){//Worst case: T(log(n)) | Best case: T(n)
+    //helper for height    
+        if(t == null){//if empty set
+            return -1;
+        }//end if
+        //computing height of set
+        int leftHeight = height(t.left) + 1;//left tree height
+        int rightHeight = height(t.right) + 1;//right tree height
+        if(leftHeight > rightHeight){//checks max height
+            return leftHeight;
+        }//end if
+        else{
+            return rightHeight;
+        }//end else
+    }//end height
+    
+    public void printBSTSet(){//Worst case: T(log(n)) | Best case: T(n)
+    /*Outputs the elements ofthis set to the console, in increasing order.*/    
+        if(root == null)
+            System.out.println("The set is empty");
+        else{
+            System.out.print("The set elements are: ");
+            printBSTSet(root);
+            System.out.print("\n");
+        }//end if
+    }//end printBSTSet
+ 
+    private void printBSTSet(TNode t){//Worst case: T(log(n)) | Best case: T(n)
+    /*Outputs to the console the elements stored in the subtree rooted int, in increasing order*/    
+        if(t != null){
+            printBSTSet(t.left);    
+            System.out.print(" " + t.element + ",");
+            printBSTSet(t.right);
+        }//end if
+    }//end printBSTSet
+   
+    /*printNonRec borrowed and modified from GeeksforGeeks 
+    (source:www.geeksforgeeks.org/inorder-tree-traversal-without-recursion/)
+    and Tutoial_03 slides to help complete method*/
+    public void printNonRec(){//Worst case: T(log(n)) | Best case: T(n)
+    /*prints the integers in this BSTSet in increasing order.
+    This method is non recursive and uses a stack to implement the in order traversal.*/    
+        if(root == null){//if empty set
+            System.out.println("The set is empty");
+            return;
+        }//end if
+        
+        Stack stack = new Stack();//intitialize stack to null
+        TNode t = root;//t is root of tree
+        
+        while(t != null){//reach the left most node to TNode t
+            stack.push(t);//adds new item on top of stack
+            t = t.left;//travrese left
+        }//end while
+        
+        while(!(stack.isEmpty())){//while s is not an empty set
+            t = stack.pop();//returns and removes the most recently pushed element
+            System.out.print(t.element + ", ");//adds comma 
+            
+            //If right child exists
+            if(t.right != null){//stop until the last node
+                t = t.right;//traverse right
+                while(t != null){//reach the left most node of TNode t
+                    stack.push(t);//later right try left 
+                    t = t.left;//traverse left
+                }//end while 
+            }//end if   
+        }//end while
+    }//end printNonRec
+    
+}//end BSTSet Class
+
+/*
+Acknowledgements: Tyson Yee | Brian Do | Mikha Muliadi
+*/
